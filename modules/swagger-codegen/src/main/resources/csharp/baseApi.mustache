@@ -1,0 +1,111 @@
+using System;
+using System.Threading.Tasks;
+using RestSharp;
+using Newtonsoft.Json;
+
+namespace {{invokerPackage}} {
+
+    public interface IApiInjector
+    {
+        event Func<object, EventArgs, Task> Begin;
+        event Func<object, UnhandledExceptionEventArgs, Task> Exception;
+        event Func<object, EventArgs, Task> End;
+    }
+
+    public abstract class BaseApi : IApiInjector
+    {
+        public event Func<object, EventArgs, Task> Begin;
+        public event Func<object, UnhandledExceptionEventArgs, Task> Exception;
+        public event Func<object, EventArgs, Task> End;
+
+        protected string basePath;
+        private RestClient _client;
+        private bool StopOnError { get; set; }
+
+        protected BaseApi(String basePath = "{{basePath}}")
+        {
+            this.basePath = basePath;
+            this._client = new RestClient(basePath);
+        }
+
+        protected virtual T ExecuteCall<T>(RestRequest request) where T : new()
+        {
+            var response = Task.Run(async () => {
+                                        var resp = await ExecuteCallAsync<T>(request);
+                                        return resp;
+                                        });
+            return response.Result;
+        }
+
+        protected virtual async Task<T> ExecuteCallAsync<T>(RestRequest request) where T : new()
+        {
+            T response = default(T);
+            Exception exc = null;
+
+            await ExecuteHandler(Begin);
+
+            try
+            {
+                var restResponse = await _client.ExecuteTaskAsync(request);
+
+                if (((int)restResponse.StatusCode) >= 400)
+                {
+                    throw new ApiException((int)restResponse.StatusCode,  "Error calling " + "'" + request.Resource+ "'  : " + restResponse.Content);
+                }
+
+                response = JsonConvert.DeserializeObject<T>(restResponse.Content);
+            }
+            catch (Exception ex)
+            {
+                exc = ex;
+            }
+
+            if (exc != null)
+            {
+                await ExecuteExceptionHandler(Exception, exc);
+            }
+
+            if (!StopOnError|| exc == null)
+            {
+                await ExecuteHandler(End);
+            }
+            return response;
+        }
+
+        private async Task ExecuteHandler(Func<object, EventArgs, Task> handler)
+        {
+            if (handler != null)
+            {
+                Delegate[] invocationList = handler.GetInvocationList();
+                Task[] handlerTasks = new Task[invocationList.Length];
+
+                for (int i = 0; i < invocationList.Length; i++)
+                {
+                    handlerTasks[i] = ((Func<object, EventArgs, Task>)invocationList[i])(this, EventArgs.Empty);
+                }
+
+                await Task.WhenAll(handlerTasks);
+            }
+        }
+
+        private async Task ExecuteExceptionHandler(Func<object, UnhandledExceptionEventArgs, Task> handler, Exception ex)
+        {
+            if (handler != null)
+            {
+                Delegate[] invocationList = handler.GetInvocationList();
+                Task[] handlerTasks = new Task[invocationList.Length];
+
+                for (int i = 0; i < invocationList.Length; i++)
+                {
+                    handlerTasks[i] = ((Func<object, UnhandledExceptionEventArgs, Task>)invocationList[i])(this, new UnhandledExceptionEventArgs(ex,true));
+                }
+
+                await Task.WhenAll(handlerTasks);
+            }
+            else
+            {
+                throw ex;
+            }
+        }
+    }
+}
