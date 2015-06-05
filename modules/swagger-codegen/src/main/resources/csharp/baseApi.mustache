@@ -10,6 +10,8 @@ namespace {{invokerPackage}} {
         event Func<object, EventArgs, Task> Begin;
         event Func<object, UnhandledExceptionEventArgs, Task> Exception;
         event Func<object, EventArgs, Task> End;
+
+        bool StopOnError { get; set; }
     }
 
     public abstract class BaseApi : IApiInjector
@@ -20,7 +22,7 @@ namespace {{invokerPackage}} {
 
         protected string basePath;
         private RestClient _client;
-        private bool StopOnError { get; set; }
+        public bool StopOnError { get; set; }
 
         protected BaseApi(String basePath = "{{basePath}}")
         {
