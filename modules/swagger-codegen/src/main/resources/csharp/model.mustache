@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 {{#model}}
 namespace {{package}} {
   [DataContract]
-  public class {{classname}} {
+  public partial class {{classname}} {
     {{#vars}}
     {{#description}}/* {{{description}}} */{{/description}}
     [DataMember(Name="{{baseName}}", EmitDefaultValue=false)]
