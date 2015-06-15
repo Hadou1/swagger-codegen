@@ -1,6 +1,6 @@
 <?php
 /**
- *  Copyright 2015 Reverb Technologies, Inc.
+ *  Copyright 2015 SmartBear Software
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ class PetApi {
   function __construct($apiClient = null) {
     if (null === $apiClient) {
       if (Configuration::$apiClient === null) {
-        Configuration::$apiClient = new APIClient(); // create a new API client if not present
+        Configuration::$apiClient = new ApiClient(); // create a new API client if not present
         $this->apiClient = Configuration::$apiClient;
       }
       else
@@ -37,7 +37,7 @@ class PetApi {
     }
   }
 
-  private $apiClient; // instance of the APIClient
+  private $apiClient; // instance of the ApiClient
 
   /**
    * get the API client
@@ -327,7 +327,7 @@ class PetApi {
       }
 
       // authentication setting, if any
-      $authSettings = array('api_key', 'petstore_auth');
+      $authSettings = array('petstore_auth', 'api_key');
 
       // make the API Call
       $response = $this->apiClient->callAPI($resourcePath, $method,

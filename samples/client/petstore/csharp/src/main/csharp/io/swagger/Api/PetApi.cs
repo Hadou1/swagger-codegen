@@ -1,39 +1,179 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using RestSharp;
 using IO.Swagger.Client;
 using IO.Swagger.Model;
 
 namespace IO.Swagger.Api {
   
-  public class PetApi {
-    string basePath;
-    protected RestClient restClient;
 
-    public PetApi(String basePath = "http://petstore.swagger.io/v2")
-    {
-      this.basePath = basePath;
-      this.restClient = new RestClient(basePath);
-    }
-
-    /// <summary>
-    /// Sets the endpoint base url for the services being accessed
-    /// </summary>
-    /// <param name="basePath"> Base URL
-    /// <returns></returns>
-    public void SetBasePath(string basePath) {
-      this.basePath = basePath;
-    }
-
-    /// <summary>
-    /// Gets the endpoint base url for the services being accessed
-    /// <returns>Base URL</returns>
-    /// </summary>
-    public String GetBasePath() {
-      return this.basePath;
-    }
-
+  public interface IPetApi {
     
+    /// <summary>
+    /// Update an existing pet 
+    /// </summary>
+    /// <param name="Body">Pet object that needs to be added to the store</param>
+    /// <returns></returns>
+    void UpdatePet (Pet Body);
+
+    /// <summary>
+    /// Update an existing pet 
+    /// </summary>
+    /// <param name="Body">Pet object that needs to be added to the store</param>
+    /// <returns></returns>
+    Task UpdatePetAsync (Pet Body);
+    
+    /// <summary>
+    /// Add a new pet to the store 
+    /// </summary>
+    /// <param name="Body">Pet object that needs to be added to the store</param>
+    /// <returns></returns>
+    void AddPet (Pet Body);
+
+    /// <summary>
+    /// Add a new pet to the store 
+    /// </summary>
+    /// <param name="Body">Pet object that needs to be added to the store</param>
+    /// <returns></returns>
+    Task AddPetAsync (Pet Body);
+    
+    /// <summary>
+    /// Finds Pets by status Multiple status values can be provided with comma seperated strings
+    /// </summary>
+    /// <param name="Status">Status values that need to be considered for filter</param>
+    /// <returns>List<Pet></returns>
+    List<Pet> FindPetsByStatus (List<string> Status);
+
+    /// <summary>
+    /// Finds Pets by status Multiple status values can be provided with comma seperated strings
+    /// </summary>
+    /// <param name="Status">Status values that need to be considered for filter</param>
+    /// <returns>List<Pet></returns>
+    Task<List<Pet>> FindPetsByStatusAsync (List<string> Status);
+    
+    /// <summary>
+    /// Finds Pets by tags Muliple tags can be provided with comma seperated strings. Use tag1, tag2, tag3 for testing.
+    /// </summary>
+    /// <param name="Tags">Tags to filter by</param>
+    /// <returns>List<Pet></returns>
+    List<Pet> FindPetsByTags (List<string> Tags);
+
+    /// <summary>
+    /// Finds Pets by tags Muliple tags can be provided with comma seperated strings. Use tag1, tag2, tag3 for testing.
+    /// </summary>
+    /// <param name="Tags">Tags to filter by</param>
+    /// <returns>List<Pet></returns>
+    Task<List<Pet>> FindPetsByTagsAsync (List<string> Tags);
+    
+    /// <summary>
+    /// Find pet by ID Returns a pet when ID &lt; 10.  ID &gt; 10 or nonintegers will simulate API error conditions
+    /// </summary>
+    /// <param name="PetId">ID of pet that needs to be fetched</param>
+    /// <returns>Pet</returns>
+    Pet GetPetById (long? PetId);
+
+    /// <summary>
+    /// Find pet by ID Returns a pet when ID &lt; 10.  ID &gt; 10 or nonintegers will simulate API error conditions
+    /// </summary>
+    /// <param name="PetId">ID of pet that needs to be fetched</param>
+    /// <returns>Pet</returns>
+    Task<Pet> GetPetByIdAsync (long? PetId);
+    
+    /// <summary>
+    /// Updates a pet in the store with form data 
+    /// </summary>
+    /// <param name="PetId">ID of pet that needs to be updated</param>/// <param name="Name">Updated name of the pet</param>/// <param name="Status">Updated status of the pet</param>
+    /// <returns></returns>
+    void UpdatePetWithForm (string PetId, string Name, string Status);
+
+    /// <summary>
+    /// Updates a pet in the store with form data 
+    /// </summary>
+    /// <param name="PetId">ID of pet that needs to be updated</param>/// <param name="Name">Updated name of the pet</param>/// <param name="Status">Updated status of the pet</param>
+    /// <returns></returns>
+    Task UpdatePetWithFormAsync (string PetId, string Name, string Status);
+    
+    /// <summary>
+    /// Deletes a pet 
+    /// </summary>
+    /// <param name="ApiKey"></param>/// <param name="PetId">Pet id to delete</param>
+    /// <returns></returns>
+    void DeletePet (string ApiKey, long? PetId);
+
+    /// <summary>
+    /// Deletes a pet 
+    /// </summary>
+    /// <param name="ApiKey"></param>/// <param name="PetId">Pet id to delete</param>
+    /// <returns></returns>
+    Task DeletePetAsync (string ApiKey, long? PetId);
+    
+    /// <summary>
+    /// uploads an image 
+    /// </summary>
+    /// <param name="PetId">ID of pet to update</param>/// <param name="AdditionalMetadata">Additional data to pass to server</param>/// <param name="File">file to upload</param>
+    /// <returns></returns>
+    void UploadFile (long? PetId, string AdditionalMetadata, string File);
+
+    /// <summary>
+    /// uploads an image 
+    /// </summary>
+    /// <param name="PetId">ID of pet to update</param>/// <param name="AdditionalMetadata">Additional data to pass to server</param>/// <param name="File">file to upload</param>
+    /// <returns></returns>
+    Task UploadFileAsync (long? PetId, string AdditionalMetadata, string File);
+    
+  }
+
+  /// <summary>
+  /// Represents a collection of functions to interact with the API endpoints
+  /// </summary>
+  public class PetApi : IPetApi {
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PetApi"/> class.
+    /// </summary>
+    /// <param name="apiClient"> an instance of ApiClient (optional)
+    /// <returns></returns>
+    public PetApi(ApiClient apiClient = null) {
+      if (apiClient == null) { // use the default one in Configuration
+        this.apiClient = Configuration.apiClient; 
+      } else {
+        this.apiClient = apiClient;
+      }
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PetApi"/> class.
+    /// </summary>
+    /// <returns></returns>
+    public PetApi(String basePath)
+    {
+      this.apiClient = new ApiClient(basePath);
+    }
+
+    /// <summary>
+    /// Sets the base path of the API client.
+    /// </summary>
+    /// <value>The base path</value>
+    public void SetBasePath(String basePath) {
+      this.apiClient.basePath = basePath;
+    }
+
+    /// <summary>
+    /// Gets the base path of the API client.
+    /// </summary>
+    /// <value>The base path</value>
+    public String GetBasePath(String basePath) {
+      return this.apiClient.basePath;
+    }
+
+    /// <summary>
+    /// Gets or sets the API client.
+    /// </summary>
+    /// <value>The API client</value>
+    public ApiClient apiClient {get; set;}
+
+
     
     /// <summary>
     /// Update an existing pet 
@@ -42,33 +182,73 @@ namespace IO.Swagger.Api {
     /// <returns></returns>
     public void UpdatePet (Pet Body) {
 
-      var _request = new RestRequest("/pet", Method.PUT);
-
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet";
+      path = path.Replace("{format}", "json");
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
       
       
       
+      postBody = apiClient.Serialize(Body); // http body (model) parameter
       
-      _request.AddParameter("application/json", ApiInvoker.Serialize(Body), ParameterType.RequestBody); // http body (model) parameter
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.PUT, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling UpdatePet: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling UpdatePet: " + response.Content, response.Content);
       }
       
       return;
     }
-    
+	
+	 /// <summary>
+    /// Update an existing pet 
+    /// </summary>
+    /// <param name="Body">Pet object that needs to be added to the store</param>
+    /// <returns></returns>
+    public async Task UpdatePetAsync (Pet Body) {
+
+      
+
+      var path = "/pet";
+      path = path.Replace("{format}", "json");
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+      
+      
+      
+      postBody = apiClient.Serialize(Body); // http body (model) parameter
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.PUT, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling UpdatePet: " + response.Content, response.Content);
+      }
+      
+      return;
+    }
     
     /// <summary>
     /// Add a new pet to the store 
@@ -77,33 +257,73 @@ namespace IO.Swagger.Api {
     /// <returns></returns>
     public void AddPet (Pet Body) {
 
-      var _request = new RestRequest("/pet", Method.POST);
-
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet";
+      path = path.Replace("{format}", "json");
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
       
       
       
+      postBody = apiClient.Serialize(Body); // http body (model) parameter
       
-      _request.AddParameter("application/json", ApiInvoker.Serialize(Body), ParameterType.RequestBody); // http body (model) parameter
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.POST, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling AddPet: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling AddPet: " + response.Content, response.Content);
       }
       
       return;
     }
-    
+	
+	 /// <summary>
+    /// Add a new pet to the store 
+    /// </summary>
+    /// <param name="Body">Pet object that needs to be added to the store</param>
+    /// <returns></returns>
+    public async Task AddPetAsync (Pet Body) {
+
+      
+
+      var path = "/pet";
+      path = path.Replace("{format}", "json");
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+      
+      
+      
+      postBody = apiClient.Serialize(Body); // http body (model) parameter
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.POST, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling AddPet: " + response.Content, response.Content);
+      }
+      
+      return;
+    }
     
     /// <summary>
     /// Finds Pets by status Multiple status values can be provided with comma seperated strings
@@ -112,32 +332,71 @@ namespace IO.Swagger.Api {
     /// <returns>List<Pet></returns>
     public List<Pet> FindPetsByStatus (List<string> Status) {
 
-      var _request = new RestRequest("/pet/findByStatus", Method.GET);
-
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet/findByStatus";
+      path = path.Replace("{format}", "json");
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+       if (Status != null) queryParams.Add("status", apiClient.ParameterToString(Status)); // query parameter
       
-       if (Status != null) _request.AddParameter("status", ApiInvoker.ParameterToString(Status)); // query parameter
       
       
       
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.GET, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling FindPetsByStatus: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling FindPetsByStatus: " + response.Content, response.Content);
       }
-      return (List<Pet>) ApiInvoker.Deserialize(response.Content, typeof(List<Pet>));
+      return (List<Pet>) apiClient.Deserialize(response.Content, typeof(List<Pet>));
     }
-    
+	
+	 /// <summary>
+    /// Finds Pets by status Multiple status values can be provided with comma seperated strings
+    /// </summary>
+    /// <param name="Status">Status values that need to be considered for filter</param>
+    /// <returns>List<Pet></returns>
+    public async Task<List<Pet>> FindPetsByStatusAsync (List<string> Status) {
+
+      
+
+      var path = "/pet/findByStatus";
+      path = path.Replace("{format}", "json");
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+       if (Status != null) queryParams.Add("status", apiClient.ParameterToString(Status)); // query parameter
+      
+      
+      
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.GET, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling FindPetsByStatus: " + response.Content, response.Content);
+      }
+      return (List<Pet>) apiClient.Deserialize(response.Content, typeof(List<Pet>));
+    }
     
     /// <summary>
     /// Finds Pets by tags Muliple tags can be provided with comma seperated strings. Use tag1, tag2, tag3 for testing.
@@ -146,32 +405,71 @@ namespace IO.Swagger.Api {
     /// <returns>List<Pet></returns>
     public List<Pet> FindPetsByTags (List<string> Tags) {
 
-      var _request = new RestRequest("/pet/findByTags", Method.GET);
-
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet/findByTags";
+      path = path.Replace("{format}", "json");
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+       if (Tags != null) queryParams.Add("tags", apiClient.ParameterToString(Tags)); // query parameter
       
-       if (Tags != null) _request.AddParameter("tags", ApiInvoker.ParameterToString(Tags)); // query parameter
       
       
       
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.GET, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling FindPetsByTags: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling FindPetsByTags: " + response.Content, response.Content);
       }
-      return (List<Pet>) ApiInvoker.Deserialize(response.Content, typeof(List<Pet>));
+      return (List<Pet>) apiClient.Deserialize(response.Content, typeof(List<Pet>));
     }
-    
+	
+	 /// <summary>
+    /// Finds Pets by tags Muliple tags can be provided with comma seperated strings. Use tag1, tag2, tag3 for testing.
+    /// </summary>
+    /// <param name="Tags">Tags to filter by</param>
+    /// <returns>List<Pet></returns>
+    public async Task<List<Pet>> FindPetsByTagsAsync (List<string> Tags) {
+
+      
+
+      var path = "/pet/findByTags";
+      path = path.Replace("{format}", "json");
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+       if (Tags != null) queryParams.Add("tags", apiClient.ParameterToString(Tags)); // query parameter
+      
+      
+      
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.GET, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling FindPetsByTags: " + response.Content, response.Content);
+      }
+      return (List<Pet>) apiClient.Deserialize(response.Content, typeof(List<Pet>));
+    }
     
     /// <summary>
     /// Find pet by ID Returns a pet when ID &lt; 10.  ID &gt; 10 or nonintegers will simulate API error conditions
@@ -180,159 +478,331 @@ namespace IO.Swagger.Api {
     /// <returns>Pet</returns>
     public Pet GetPetById (long? PetId) {
 
-      var _request = new RestRequest("/pet/{petId}", Method.GET);
-
       
       // verify the required parameter 'PetId' is set
       if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling GetPetById");
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet/{petId}";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
-      _request.AddUrlSegment("petId", ApiInvoker.ParameterToString(PetId)); // path (url segment) parameter
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
       
       
       
       
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth", "api_key" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.GET, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling GetPetById: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling GetPetById: " + response.Content, response.Content);
       }
-      return (Pet) ApiInvoker.Deserialize(response.Content, typeof(Pet));
+      return (Pet) apiClient.Deserialize(response.Content, typeof(Pet));
     }
-    
+	
+	 /// <summary>
+    /// Find pet by ID Returns a pet when ID &lt; 10.  ID &gt; 10 or nonintegers will simulate API error conditions
+    /// </summary>
+    /// <param name="PetId">ID of pet that needs to be fetched</param>
+    /// <returns>Pet</returns>
+    public async Task<Pet> GetPetByIdAsync (long? PetId) {
+
+      
+          // verify the required parameter 'PetId' is set
+          if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling GetPetById");
+      
+
+      var path = "/pet/{petId}";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+      
+      
+      
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth", "api_key" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.GET, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling GetPetById: " + response.Content, response.Content);
+      }
+      return (Pet) apiClient.Deserialize(response.Content, typeof(Pet));
+    }
     
     /// <summary>
     /// Updates a pet in the store with form data 
     /// </summary>
-    /// <param name="PetId">ID of pet that needs to be updated</param>
-    /// <param name="Name">Updated name of the pet</param>
-    /// <param name="Status">Updated status of the pet</param>
+    /// <param name="PetId">ID of pet that needs to be updated</param>/// <param name="Name">Updated name of the pet</param>/// <param name="Status">Updated status of the pet</param>
     /// <returns></returns>
     public void UpdatePetWithForm (string PetId, string Name, string Status) {
-
-      var _request = new RestRequest("/pet/{petId}", Method.POST);
 
       
       // verify the required parameter 'PetId' is set
       if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling UpdatePetWithForm");
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet/{petId}";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
-      _request.AddUrlSegment("petId", ApiInvoker.ParameterToString(PetId)); // path (url segment) parameter
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
       
       
+      if (Name != null) formParams.Add("name", apiClient.ParameterToString(Name)); // form parameter
+      if (Status != null) formParams.Add("status", apiClient.ParameterToString(Status)); // form parameter
       
-      if (Name != null) _request.AddParameter("name", ApiInvoker.ParameterToString(Name)); // form parameter
-      if (Status != null) _request.AddParameter("status", ApiInvoker.ParameterToString(Status)); // form parameter
       
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.POST, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling UpdatePetWithForm: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling UpdatePetWithForm: " + response.Content, response.Content);
+      }
+      
+      return;
+    }
+	
+	 /// <summary>
+    /// Updates a pet in the store with form data 
+    /// </summary>
+    /// <param name="PetId">ID of pet that needs to be updated</param>/// <param name="Name">Updated name of the pet</param>/// <param name="Status">Updated status of the pet</param>
+    /// <returns></returns>
+    public async Task UpdatePetWithFormAsync (string PetId, string Name, string Status) {
+
+      
+          // verify the required parameter 'PetId' is set
+          if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling UpdatePetWithForm");
+      
+
+      var path = "/pet/{petId}";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+      
+      
+      if (Name != null) formParams.Add("name", apiClient.ParameterToString(Name)); // form parameter
+      if (Status != null) formParams.Add("status", apiClient.ParameterToString(Status)); // form parameter
+      
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.POST, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling UpdatePetWithForm: " + response.Content, response.Content);
       }
       
       return;
     }
     
-    
     /// <summary>
     /// Deletes a pet 
     /// </summary>
-    /// <param name="ApiKey"></param>
-    /// <param name="PetId">Pet id to delete</param>
+    /// <param name="ApiKey"></param>/// <param name="PetId">Pet id to delete</param>
     /// <returns></returns>
     public void DeletePet (string ApiKey, long? PetId) {
-
-      var _request = new RestRequest("/pet/{petId}", Method.DELETE);
 
       
       // verify the required parameter 'PetId' is set
       if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling DeletePet");
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet/{petId}";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
-      _request.AddUrlSegment("petId", ApiInvoker.ParameterToString(PetId)); // path (url segment) parameter
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+      
+       if (ApiKey != null) headerParams.Add("api_key", apiClient.ParameterToString(ApiKey)); // header parameter
       
       
-       if (ApiKey != null) _request.AddHeader("api_key", ApiInvoker.ParameterToString(ApiKey)); // header parameter
       
-      
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.DELETE, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling DeletePet: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling DeletePet: " + response.Content, response.Content);
+      }
+      
+      return;
+    }
+	
+	 /// <summary>
+    /// Deletes a pet 
+    /// </summary>
+    /// <param name="ApiKey"></param>/// <param name="PetId">Pet id to delete</param>
+    /// <returns></returns>
+    public async Task DeletePetAsync (string ApiKey, long? PetId) {
+
+      
+          // verify the required parameter 'PetId' is set
+          if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling DeletePet");
+      
+
+      var path = "/pet/{petId}";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+      
+       if (ApiKey != null) headerParams.Add("api_key", apiClient.ParameterToString(ApiKey)); // header parameter
+      
+      
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.DELETE, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling DeletePet: " + response.Content, response.Content);
       }
       
       return;
     }
     
-    
     /// <summary>
     /// uploads an image 
     /// </summary>
-    /// <param name="PetId">ID of pet to update</param>
-    /// <param name="AdditionalMetadata">Additional data to pass to server</param>
-    /// <param name="File">file to upload</param>
+    /// <param name="PetId">ID of pet to update</param>/// <param name="AdditionalMetadata">Additional data to pass to server</param>/// <param name="File">file to upload</param>
     /// <returns></returns>
     public void UploadFile (long? PetId, string AdditionalMetadata, string File) {
-
-      var _request = new RestRequest("/pet/{petId}/uploadImage", Method.POST);
 
       
       // verify the required parameter 'PetId' is set
       if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling UploadFile");
       
 
-      // add default header, if any
-      foreach(KeyValuePair<string, string> defaultHeader in ApiInvoker.GetDefaultHeader())
-      {
-        _request.AddHeader(defaultHeader.Key, defaultHeader.Value);
-      }
+      var path = "/pet/{petId}/uploadImage";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
 
-      _request.AddUrlSegment("format", "json"); // set format to json by default
-      _request.AddUrlSegment("petId", ApiInvoker.ParameterToString(PetId)); // path (url segment) parameter
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
       
       
+      if (AdditionalMetadata != null) formParams.Add("additionalMetadata", apiClient.ParameterToString(AdditionalMetadata)); // form parameter
+      if (File != null) fileParams.Add("file", File);
       
-      if (AdditionalMetadata != null) _request.AddParameter("additionalMetadata", ApiInvoker.ParameterToString(AdditionalMetadata)); // form parameter
-      if (File != null) _request.AddFile("file", File);
       
-      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
 
       // make the HTTP request
-      IRestResponse response = restClient.Execute(_request);
+      IRestResponse response = (IRestResponse) apiClient.CallApi(path, Method.POST, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+
       if (((int)response.StatusCode) >= 400) {
-        throw new ApiException ((int)response.StatusCode, "Error calling UploadFile: " + response.Content);
+        throw new ApiException ((int)response.StatusCode, "Error calling UploadFile: " + response.Content, response.Content);
+      }
+      
+      return;
+    }
+	
+	 /// <summary>
+    /// uploads an image 
+    /// </summary>
+    /// <param name="PetId">ID of pet to update</param>/// <param name="AdditionalMetadata">Additional data to pass to server</param>/// <param name="File">file to upload</param>
+    /// <returns></returns>
+    public async Task UploadFileAsync (long? PetId, string AdditionalMetadata, string File) {
+
+      
+          // verify the required parameter 'PetId' is set
+          if (PetId == null) throw new ApiException(400, "Missing required parameter 'PetId' when calling UploadFile");
+      
+
+      var path = "/pet/{petId}/uploadImage";
+      path = path.Replace("{format}", "json");
+      path = path.Replace("{" + "petId" + "}", apiClient.ParameterToString(PetId));
+      
+
+      var queryParams = new Dictionary<String, String>();
+      var headerParams = new Dictionary<String, String>();
+      var formParams = new Dictionary<String, String>();
+      var fileParams = new Dictionary<String, String>();
+      String postBody = null;
+
+      
+      
+      if (AdditionalMetadata != null) formParams.Add("additionalMetadata", apiClient.ParameterToString(AdditionalMetadata)); // form parameter
+      if (File != null) fileParams.Add("file", File);
+      
+      
+
+      // authentication setting, if any
+      String[] authSettings = new String[] { "petstore_auth" };
+
+      // make the HTTP request
+      IRestResponse response = (IRestResponse) await apiClient.CallApiAsync(path, Method.POST, queryParams, postBody, headerParams, formParams, fileParams, authSettings);
+      if (((int)response.StatusCode) >= 400) {
+        throw new ApiException ((int)response.StatusCode, "Error calling UploadFile: " + response.Content, response.Content);
       }
       
       return;
     }
     
-  }
+  }  
   
 }

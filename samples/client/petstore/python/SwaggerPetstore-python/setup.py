@@ -12,13 +12,13 @@ from setuptools import setup, find_packages
 # Try reading the setuptools documentation:
 # http://pypi.python.org/pypi/setuptools
 
-REQUIRES = ["urllib3 >= 1.10", "six >= 1.9"]
+REQUIRES = ["urllib3 >= 1.10", "six >= 1.9", "certifi"]
 
 setup(
     name="SwaggerPetstore",
     version="1.0.0",
     description="Swagger Petstore",
-    author_email="apiteam@wordnik.com",
+    author_email="apiteam@swagger.io",
     url="",
     keywords=["Swagger", "Swagger Petstore"],
     install_requires=REQUIRES,
